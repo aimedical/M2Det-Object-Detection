@@ -31,6 +31,8 @@ print_info('--------------------------------------------------------------------
 logger = set_logger(args.tensorboard)
 global cfg
 cfg = Config.fromfile(args.config)
+print(args)
+print(cfg)
 net = build_net('train', 
                 size = cfg.model.input_size, # Only 320, 512, 704 and 800 are supported
                 config = cfg.model.m2det_config)

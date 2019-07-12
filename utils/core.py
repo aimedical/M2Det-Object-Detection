@@ -9,21 +9,22 @@ import torch.backends.cudnn as cudnn
 from layers.functions import PriorBox
 from layers.modules import MultiBoxLoss
 from data import mk_anchors
-from data import COCODetection, VOCDetection, detection_collate, preproc
+from data import VOCDetection, detection_collate, preproc
 from configs.CC import Config
 from termcolor import cprint
 from utils.nms_wrapper import nms
 import numpy as np
+from aim.datasets import CocoDetection
 
 def set_logger(status):
     if status:
-        from logger import Logger
+        from tensorboardX import SummaryWriter
         date = time.strftime("%m_%d_%H_%M") + '_log'
         log_path = './logs/'+ date
         if os.path.exists(log_path):
             shutil.rmtree(log_path)
         os.makedirs(log_path)
-        logger = Logger(log_path)
+        logger = SummaryWriter(log_dir=log_path)
         return logger
     else:
         pass
@@ -86,14 +87,12 @@ def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_s
 
 def get_dataloader(cfg, dataset, setname='train_sets'):
     _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
-    Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
+    Dataloader_function = {'COCO':CocoDetection}
     _Dataloader_function = Dataloader_function[dataset]
     if setname == 'train_sets':
-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
-                                   getattr(cfg.dataset, dataset)[setname], _preproc)
+        dataset = _Dataloader_function(os.path.join(cfg.COCOroot, 'train'), os.path.join(cfg.COCOroot, 'train.json'), transforms=_preproc)
     else:
-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
-                                   getattr(cfg.dataset, dataset)[setname], None)
+        dataset = _Dataloader_function(os.path.join(cfg.COCOroot, 'val'), os.path.join(cfg.COCOroot, 'val.json'), transforms=None)
     return dataset
     
 def print_train_log(iteration, print_epochs, info_list):
@@ -124,7 +123,7 @@ def save_checkpoint(net, cfg, final=True, datasetname='COCO',epoch=10):
 def write_logger(info_dict,logger,iteration,status):
     if status:
         for tag,value in info_dict.items():
-            logger.scalar_summary(tag, value, iteration)
+            logger.add_scalar(tag, value, iteration)
     else:
         pass
 

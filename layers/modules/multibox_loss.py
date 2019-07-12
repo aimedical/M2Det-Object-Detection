@@ -74,8 +74,8 @@ class MultiBoxLoss(nn.Module):
             loc_t = loc_t.cuda()
             conf_t = conf_t.cuda()
         # wrap targets
-        loc_t = torch.Tensor(loc_t, requires_grad=False)
-        conf_t = torch.Tensor(conf_t,requires_grad=False)
+        loc_t = loc_t.detach()
+        conf_t = conf_t.detach()
 
         pos = conf_t > 0
 

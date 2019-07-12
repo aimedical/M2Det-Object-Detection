@@ -59,19 +59,4 @@ loss = dict(overlap_thresh = 0.5,
 
 optimizer = dict(type='SGD', momentum=0.9, weight_decay=0.0005)
 
-dataset = dict(
-    VOC = dict(
-        train_sets = [('2007', 'trainval'), ('2012', 'trainval')],
-        eval_sets = [('2007', 'test')],
-        ),
-    COCO = dict(
-        train_sets = [('2014', 'train'), ('2014', 'valminusminival')],
-        eval_sets = [('2014', 'minival')],
-        test_sets = [('2015', 'test-dev')],
-        )
-    )
-
-import os
-home = os.path.expanduser("~/Desktop/Data/")
-VOCroot = os.path.join(home,"VOCdevkit/")
-COCOroot = os.path.join(home,"coco/")
+COCOroot = './my_data/'
