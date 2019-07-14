@@ -14,7 +14,7 @@ from configs.CC import Config
 from termcolor import cprint
 from utils.nms_wrapper import nms
 import numpy as np
-from aim.datasets import CocoDetection
+from data.coco import CocoDetection
 
 def set_logger(status):
     if status:
@@ -163,5 +163,31 @@ def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_p
             for j in range(1, num_classes):
                 keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
                 all_boxes[j][i] = all_boxes[j][i][keep, :]
+
+def nms_process_for_eval(num_classes, scores, boxes, cfg, min_thresh, max_per_image):
+    all_boxes = [None for j in range(num_classes)]
+    for j in range(1, num_classes): # ignore the bg(category_id=0)
+        inds = np.where(scores[:,j] > min_thresh)[0]
+        if len(inds) == 0:
+            continue
+        c_bboxes = boxes[inds]
+        c_scores = scores[inds, j]
+        c_dets = np.hstack((c_bboxes, c_scores[:, np.newaxis])).astype(np.float32, copy=False)
+
+        soft_nms = cfg.test_cfg.soft_nms
+        keep = nms(c_dets, cfg.test_cfg.iou, force_cpu=soft_nms)
+        keep = keep[:cfg.test_cfg.keep_per_class] # keep only the highest boxes
+        c_dets = c_dets[keep, :]
+        all_boxes[j] = c_dets
+
+    if max_per_image > 0:
+        image_scores = np.hstack([all_boxes[j][:, -1] for j in range(1, num_classes)])
+        if len(image_scores) > max_per_image:
+            image_thresh = np.sort(image_scores)[-max_per_image]
+            for j in range(1, num_classes):
+                keep = np.where(all_boxes[j][:, -1] >= image_thresh)[0]
+                all_boxes[j] = all_boxes[j][keep, :]
+
+    return all_boxes
 
 

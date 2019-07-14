@@ -6,7 +6,6 @@
 # --------------------------------------------------------
 
 from .nms.cpu_nms import cpu_nms, cpu_soft_nms
-from .nms.gpu_nms import gpu_nms
 
 
 # def nms(dets, thresh, force_cpu=False):
@@ -25,7 +24,8 @@ def nms(dets, thresh, force_cpu=False):
 
     if dets.shape[0] == 0:
         return []
+
     if force_cpu:
         return cpu_soft_nms(dets, thresh, method = 1)
-        #return cpu_nms(dets, thresh)
-    return gpu_nms(dets, thresh)
+
+    return cpu_nms(dets, thresh)
